@@ -24,4 +24,11 @@ export default class TODoTasks {
     }
     return false;
   }
+
+  updateCompletionStatus(taskId, completed) {
+    const task = this.tasks.find((task) => task.id === taskId);
+    if (task) {
+      task.completed = completed;
+    }
+  }
 }

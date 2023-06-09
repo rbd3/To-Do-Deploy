@@ -11,6 +11,19 @@ ulElement.classList.add('card-sub');
 
 const tasks = new TODoTasks();
 
+const loadTasksFromLocalStorage = () => {
+  const storedTasks = localStorage.getItem('tasks');
+  if (storedTasks) {
+    tasks.tasks = JSON.parse(storedTasks);
+  }
+};
+
+const updateTaskIds = () => {
+  tasks.tasks.forEach((task, index) => {
+    task.id = index + 1;
+  });
+};
+
 // Clear existing tasks
 const clearTaskList = () => {
   const ulElement = task.querySelector('.card-sub');
@@ -27,7 +40,7 @@ function editTaskDescription(taskId, liElement, taskList) {
     inputElement.value = taskDescriptionElement.textContent;
 
     inputElement.addEventListener('keydown', (event) => {
-      if (event.keyCode === 13) {
+      if (event.key === 'Enter') {
         const newDescription = inputElement.value.trim();
         const success = tasks.editDescription(taskId, newDescription);
         if (success) {
@@ -57,12 +70,17 @@ const taskList = () => {
     const trashIcon = liElement.querySelector('.fa-trash-can');
     const checkbox = liElement.querySelector('input[type="checkbox"]');
 
+    // Add a click event listener to the three dots icon
     threeDotsIcon.addEventListener('click', () => {
       editTaskDescription(task.id, liElement, taskList);
     });
 
     checkbox.addEventListener('change', () => {
-      if (checkbox.checked) {
+      const taskId = parseInt(liElement.dataset.taskId, 10);
+      const completed = checkbox.checked;
+      tasks.updateCompletionStatus(taskId, completed);
+      localStorage.setItem('tasks', JSON.stringify(tasks.tasks));
+      if (completed) {
         trashIcon.classList.remove('hide');
         threeDotsIcon.classList.add('hide');
       } else {
@@ -75,6 +93,7 @@ const taskList = () => {
       const taskId = parseInt(liElement.dataset.taskId, 10);
       tasks.remove(taskId);
       clearTaskList();
+      updateTaskIds();
       taskList();
     });
 
@@ -84,6 +103,9 @@ const taskList = () => {
   task.appendChild(ulElement);
   localStorage.setItem('tasks', JSON.stringify(tasks.tasks));
 };
+
+loadTasksFromLocalStorage();
+taskList();
 
 const buttonClear = document.createElement('button');
 buttonClear.type = 'button';
@@ -108,17 +130,19 @@ const addTask = () => {
       clearTaskList();
       taskList();
       addNew.value = '';
+      localStorage.setItem('tasks', JSON.stringify(tasks.tasks));
     }
   }
 };
 
 addNew.addEventListener('keydown', (event) => {
-  if (event.keyCode === 13) {
+  if (event.key === 'Enter') {
     addTask();
   }
 });
 
 window.addEventListener('DOMContentLoaded', () => {
+  loadTasksFromLocalStorage();
   taskList();
 });
 
@@ -137,6 +161,7 @@ const clearCompletedTasks = () => {
   // Update the tasks array
   tasks.tasks = updatedTasks;
   clearTaskList();
+  updateTaskIds();
   taskList();
   localStorage.setItem('tasks', JSON.stringify(tasks.tasks));
 };
